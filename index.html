@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Nestella cheat sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBF8F3;
+    --card: #FFFFFF;
+    --accent: #5E86C9;
+    --text: #3A3A42;
+    --muted: #7A7783;
+    --border: #ECE7DE;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: 'Nunito', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  header {
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    border-bottom: 3px solid var(--accent);
+    display: inline-block;
+    padding-bottom: 4px;
+  }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(58, 58, 66, 0.08);
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  section.card h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 8px;
+  }
+  section.card p, section.card ul {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+  }
+  section.card p.muted { color: var(--muted); }
+  section.card li {
+    list-style: none;
+    margin: 0 0 4px;
+  }
+  a.call-button {
+    display: block;
+    text-align: center;
+    background: var(--accent);
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    min-height: 44px;
+    box-sizing: border-box;
+    margin-top: 12px;
+  }
+  footer {
+    margin-top: 8px;
+    text-align: center;
+  }
+  footer p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0 0 4px;
+  }
+  /* Warm centered shell for loading / error states */
+  .shell {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shell section.card {
+    text-align: center;
+    padding: 24px;
+    margin-bottom: 0;
+  }
+  .shell h1 {
+    font-size: 18px;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+</style>
+</head>
+<body>
+<main id="app">
+  <div class="shell">
+    <section class="card">
+      <h1>Loading…</h1>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  // The ONLY place this app's origin lives. `Access-Control-Allow-Origin` on
+  // the Edge Function is scoped to this page's own origin (share.nestella.app),
+  // so this must match exactly or the fetch below is silently blocked by CORS.
+  var API_BASE = 'https://glzuvwhcrkgnzghrsqda.supabase.co/functions/v1/cheat-sheet';
+
+  var app = document.getElementById('app');
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (Object.prototype.hasOwnProperty.call(attrs, k)) {
+          node.setAttribute(k, attrs[k]);
+        }
+      }
+    }
+    (children || []).forEach(function (child) {
+      if (child == null) return;
+      node.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+    });
+    return node;
+  }
+
+  function card(children) {
+    return el('section', { class: 'card' }, children);
+  }
+
+  // Strip everything except digits and a leading + before building a tel:
+  // href — mirrors the server's `telHref` (mobile Notes/keyboard formatting
+  // punctuation must never end up in the href itself).
+  function telHref(phone) {
+    var cleaned = phone.replace(/[^\d+]/g, '');
+    return 'tel:' + cleaned;
+  }
+
+  function renderShell(title, body) {
+    app.innerHTML = '';
+    app.appendChild(
+      el('div', { class: 'shell' }, [
+        card([
+          el('h1', null, [title]),
+          el('p', { class: 'muted' }, [body]),
+        ]),
+      ]),
+    );
+  }
+
+  function renderPayload(p) {
+    app.innerHTML = '';
+
+    var header = el('header', null, [
+      el('h1', null, [p.childFirstName + ' · ' + p.ageText]),
+    ]);
+
+    var todayList = el('ul', null, p.todaySoFar.map(function (line) {
+      return el('li', null, [line]);
+    }));
+    var todayCard = card([el('h2', null, ['Today so far']), todayList]);
+
+    var rhythmCard = card([
+      el('h2', null, ['Daily rhythm']),
+      el('p', { class: 'muted' }, [p.dailyRhythm]),
+    ]);
+
+    var goodToKnowCard = p.dietaryNotes
+      ? card([el('h2', null, ['Good to know']), el('p', null, [p.dietaryNotes])])
+      : card([
+          el('h2', null, ['Good to know']),
+          el('p', { class: 'muted' }, ['Nothing special to note today — just the usual love and snacks.']),
+        ]);
+
+    var emergencyCard = p.emergencyContact
+      ? card([
+          el('h2', null, ['In an emergency']),
+          el('p', null, [p.emergencyContact.name]),
+          el('a', { class: 'call-button', href: telHref(p.emergencyContact.phone) }, [
+            'Call ' + p.emergencyContact.name,
+          ]),
+        ])
+      : card([
+          el('h2', null, ['In an emergency']),
+          el('p', { class: 'muted' }, ["Ask " + p.childFirstName + "'s parent for a contact number."]),
+        ]);
+
+    var footer = el('footer', null, [
+      el('p', null, [p.dateText]),
+      el('p', null, [p.expiryText]),
+    ]);
+
+    app.appendChild(header);
+    app.appendChild(todayCard);
+    app.appendChild(rhythmCard);
+    app.appendChild(goodToKnowCard);
+    app.appendChild(emergencyCard);
+    app.appendChild(footer);
+
+    document.title = p.childFirstName + "'s day";
+  }
+
+  // Warm copy for a network/fetch failure — no equivalent existed server-side
+  // (the old design always got SOME response from the same origin); this is
+  // the one new failure mode a client-side fetch introduces. Never a raw
+  // error, never technical detail (T-06-02-ERRLEAK discipline, carried over).
+  var NETWORK_ERROR = {
+    title: "Couldn't load this page",
+    body: 'Check your connection and try again.',
+  };
+
+  var token = new URLSearchParams(window.location.search).get('token');
+  if (!token) {
+    renderShell("We couldn't find that page", 'Double-check the link you were sent.');
+  } else {
+    fetch(API_BASE + '?token=' + encodeURIComponent(token))
+      .then(function (res) {
+        return res.json().then(function (body) {
+          return { status: res.status, body: body };
+        });
+      })
+      .then(function (result) {
+        if (result.body && result.body.ok) {
+          renderPayload(result.body);
+        } else if (result.body && result.body.title) {
+          renderShell(result.body.title, result.body.body);
+        } else {
+          renderShell(NETWORK_ERROR.title, NETWORK_ERROR.body);
+        }
+      })
+      .catch(function () {
+        renderShell(NETWORK_ERROR.title, NETWORK_ERROR.body);
+      });
+  }
+})();
+</script>
+</body>
+</html>
