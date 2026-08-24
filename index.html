@@ -92,6 +92,12 @@
     color: var(--muted);
     margin: 0 0 4px;
   }
+  /* Separates one child's cards from the next on an "all children" link. */
+  .child-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 8px 0 24px;
+  }
   /* Warm centered shell for loading / error states */
   .shell {
     min-height: 80vh;
@@ -171,8 +177,11 @@
     );
   }
 
-  function renderPayload(p) {
-    app.innerHTML = '';
+  // One child's header + four cards + footer — unchanged shape from before
+  // the all-children option existed. Returns a DocumentFragment so the
+  // caller can place N of these one after another.
+  function renderChildBlock(p) {
+    var frag = document.createDocumentFragment();
 
     var header = el('header', null, [
       el('h1', null, [p.childFirstName + ' · ' + p.ageText]),
@@ -213,14 +222,33 @@
       el('p', null, [p.expiryText]),
     ]);
 
-    app.appendChild(header);
-    app.appendChild(todayCard);
-    app.appendChild(rhythmCard);
-    app.appendChild(goodToKnowCard);
-    app.appendChild(emergencyCard);
-    app.appendChild(footer);
+    frag.appendChild(header);
+    frag.appendChild(todayCard);
+    frag.appendChild(rhythmCard);
+    frag.appendChild(goodToKnowCard);
+    frag.appendChild(emergencyCard);
+    frag.appendChild(footer);
+    return frag;
+  }
 
-    document.title = p.childFirstName + "'s day";
+  // `children` is always an array (2026-08-24) — length 1 for a single-child
+  // link, length N for an "all children" link. Rendered as N stacked blocks,
+  // divided by a hairline so a multi-child page doesn't read as one
+  // confused child with two names.
+  function renderPayload(body) {
+    app.innerHTML = '';
+    var kids = body.children;
+
+    kids.forEach(function (p, i) {
+      if (i > 0) {
+        app.appendChild(el('hr', { class: 'child-divider' }, []));
+      }
+      app.appendChild(renderChildBlock(p));
+    });
+
+    document.title = kids.length === 1
+      ? kids[0].childFirstName + "'s day"
+      : kids.map(function (p) { return p.childFirstName; }).join(' & ') + "'s day";
   }
 
   // Warm copy for a network/fetch failure — no equivalent existed server-side
