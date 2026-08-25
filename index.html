@@ -135,6 +135,15 @@
   // so this must match exactly or the fetch below is silently blocked by CORS.
   var API_BASE = 'https://glzuvwhcrkgnzghrsqda.supabase.co/functions/v1/cheat-sheet';
 
+  // Mirrored from `deriveDailyRhythm` in supabase/functions/_shared/cheatSheet.ts —
+  // the JSON payload carries no explicit empty-state flag, so an exact-string
+  // comparison against this constant is the only signal this page has for
+  // "no rhythm data yet". If the server copy is ever reworded, this comparison
+  // simply stops matching and the placeholder renders in the primary colour
+  // instead of the muted one — the safe direction, since it never risks
+  // mis-styling real data as a placeholder.
+  var DAILY_RHYTHM_EMPTY = "Every day looks a little different — follow their cues and you'll do beautifully.";
+
   var app = document.getElementById('app');
 
   function el(tag, attrs, children) {
@@ -192,10 +201,12 @@
     }));
     var todayCard = card([el('h2', null, ['Today so far']), todayList]);
 
-    var rhythmCard = card([
-      el('h2', null, ['Daily rhythm']),
-      el('p', { class: 'muted' }, [p.dailyRhythm]),
-    ]);
+    var rhythmCard = p.dailyRhythm === DAILY_RHYTHM_EMPTY
+      ? card([
+          el('h2', null, ['Daily rhythm']),
+          el('p', { class: 'muted' }, [DAILY_RHYTHM_EMPTY]),
+        ])
+      : card([el('h2', null, ['Daily rhythm']), el('p', null, [p.dailyRhythm])]);
 
     var goodToKnowCard = p.dietaryNotes
       ? card([el('h2', null, ['Good to know']), el('p', null, [p.dietaryNotes])])
