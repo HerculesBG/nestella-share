@@ -230,10 +230,17 @@
           el('p', { class: 'muted' }, ["Ask " + p.childFirstName + "'s parent for a contact number."]),
         ]);
 
-    var referenceCards = p.referenceSections.map(function (section) {
+    // Tolerate a payload from an older Edge Function revision: the two sides
+    // deploy through independent pipelines (Supabase functions vs. GitHub
+    // Pages), so referenceSections can be absent even though the field has
+    // been in the contract since this section shipped. Without this guard
+    // a missing field throws here -- AFTER app.innerHTML was cleared -- and
+    // blanks the whole page, including the emergency-contact card built
+    // above.
+    var referenceCards = (p.referenceSections || []).map(function (section) {
       return card([
         el('h2', null, [section.heading]),
-        el('ul', null, section.items.map(function (item) {
+        el('ul', null, (section.items || []).map(function (item) {
           return el('li', null, [item]);
         })),
       ]);
