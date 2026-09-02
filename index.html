@@ -230,6 +230,15 @@
           el('p', { class: 'muted' }, ["Ask " + p.childFirstName + "'s parent for a contact number."]),
         ]);
 
+    var referenceCards = p.referenceSections.map(function (section) {
+      return card([
+        el('h2', null, [section.heading]),
+        el('ul', null, section.items.map(function (item) {
+          return el('li', null, [item]);
+        })),
+      ]);
+    });
+
     var footer = el('footer', null, [
       el('p', null, [p.dateText]),
       el('p', null, [p.expiryText]),
@@ -240,6 +249,9 @@
     frag.appendChild(rhythmCard);
     frag.appendChild(goodToKnowCard);
     frag.appendChild(emergencyCard);
+    referenceCards.forEach(function (c) {
+      frag.appendChild(c);
+    });
     frag.appendChild(footer);
     return frag;
   }
